@@ -6,5 +6,4 @@ Contains 3 files:
 - Standard logistic regression model 
 - Instance reweighted logistic regression model
 - Quadratic approximation of blankout regularization
-- Quadratic approximation of dropout regularization
-- 
+- Quadratic approximation of dropout regularization 
