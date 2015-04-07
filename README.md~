@@ -1,5 +1,5 @@
-# da_fir
-Adaptive regularization for domain adaptation
+# da_far
+Feature Absence Regularization for domain adaptation
 
 Contains 3 files:
 - Script to run experiments on Amazon sentiment dataset (data not included)
