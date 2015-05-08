@@ -1,4 +1,4 @@
-function [L, dL] = irw_log_grad(W,X,y,iw, lambda)
+function [L, dL] = mWLR_grad(W,X,y,iw, lambda)
 % Implementation of weighted logistic regression
 % Wouter Kouw
 % 29-09-2014

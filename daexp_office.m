@@ -1,5 +1,5 @@
-function [tme,tse,W,Theta,terr] = daexp_amazon(clf,prep,varargin)
-% Function to run some da experiments on spam mail/sms datasets
+function [tme,tse,W,Theta,terr] = daexp_office(clf,prep,varargin)
+% Function to run experiments on the office dataset with surf features
 
 % Parse hyperparameters
 p = inputParser;
@@ -17,25 +17,26 @@ nR = p.Results.nR;
 nF = p.Results.nF;
 fc = p.Results.fc;
 
+% To do:
+% - other office features
+disp(['Using SURF features, others not implemented yet']);
+
 % Load data
 try
-    load('/home/nfs/wkouw/amazon.mat');
+    load('home/nfs/wkouw/office_surf.mat')
 catch
-    load('/home/wmkouw/Data/Amazon/amazon.mat');
+    load('/home/wmkouw/Data/Office/domain_adaptation_features/office_surf.mat');
 end
 
 % In case of feature curve experiment, sample given features
-if ~isempty(fc); sX = sX(fc,:); end
-
-% Map labels to [1,2]
-y(y==-1) = 2;
+if ~isempty(fc); sX = sX(:,fc); end
 
 % Preprocess counts
-sX = da_prep(sX,prep);
+sX = da_prep(sX',prep);
 
 % Loop trough pairwise da combinations
 lD = length(domain_names);
-cmb = [nchoosek(1:lD,2); fliplr(nchoosek(1:lD,2)); repmat([1:lD], [2 1])'];
+cmb = [nchoosek(1:lD,2); fliplr(nchoosek(1:lD,2)); repmat(1:lD, [2 1])'];
 lCmb = length(cmb);
 
 % Preallocation
@@ -64,7 +65,7 @@ for cc = 1:lCmb;
         else
             [W{cc},Theta{cc},terr{cc}] = da_crossval_within(clf,XQ,yQ,'nR',nR,'nF',nF,'l2',l2);
         end
-    else    
+    else
         % Run a crossvalidation procedure on between-domain combination
         if p.Results.par;
             [W{cc},Theta{cc},terr{cc}] = da_crossval_between_par(clf,XQ,yQ,XP,yP,'nR',nR,'nF',nF,'l2',l2);
@@ -80,11 +81,12 @@ for cc = 1:lCmb;
 end
 
 if p.Results.save;
-	% Write intermediate results
+    % Write intermediate results
     if ~iscell(prep); prep = {prep}; end
-    fname = ['daexp_amazon_xval_'  clf '_' prep{:} '_' ...
+    fname = ['daexp_office_surf_xval_'  clf '_' prep{:} '_' ...
         domain_names{cmb(cc,1)} '_' domain_names{cmb(cc,2)} '.mat'];
     save(fname, 'tme','tse','terr','Theta','W', 'cmb', 'l2');
 end
 
 end
+

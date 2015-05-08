@@ -1,4 +1,4 @@
-function [tme,tse,W,Theta,terr] = daexp_amazon(clf,prep,varargin)
+function [tme,tse,W,Theta,terr] = daexp_imdb(clf,prep,varargin)
 % Function to run some da experiments on spam mail/sms datasets
 
 % Parse hyperparameters
@@ -19,9 +19,9 @@ fc = p.Results.fc;
 
 % Load data
 try
-    load('/home/nfs/wkouw/amazon.mat');
+    load('/home/nfs/wkouw/da_imdb5.mat');
 catch
-    load('/home/wmkouw/Data/Amazon/amazon.mat');
+    load('/home/wmkouw/Dropbox/Projects/far/da_imdb5.mat');
 end
 
 % In case of feature curve experiment, sample given features
@@ -64,7 +64,7 @@ for cc = 1:lCmb;
         else
             [W{cc},Theta{cc},terr{cc}] = da_crossval_within(clf,XQ,yQ,'nR',nR,'nF',nF,'l2',l2);
         end
-    else    
+    else
         % Run a crossvalidation procedure on between-domain combination
         if p.Results.par;
             [W{cc},Theta{cc},terr{cc}] = da_crossval_between_par(clf,XQ,yQ,XP,yP,'nR',nR,'nF',nF,'l2',l2);
@@ -80,9 +80,9 @@ for cc = 1:lCmb;
 end
 
 if p.Results.save;
-	% Write intermediate results
+    % Write intermediate results
     if ~iscell(prep); prep = {prep}; end
-    fname = ['daexp_amazon_xval_'  clf '_' prep{:} '_' ...
+    fname = ['daexp_imdb_small_xval'  clf '_' prep{:} '_' ...
         domain_names{cmb(cc,1)} '_' domain_names{cmb(cc,2)} '.mat'];
     save(fname, 'tme','tse','terr','Theta','W', 'cmb', 'l2');
 end

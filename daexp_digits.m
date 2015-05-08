@@ -1,5 +1,5 @@
-function [tme,tse,W,Theta,terr] = daexp_amazon(clf,prep,varargin)
-% Function to run some da experiments on spam mail/sms datasets
+function [tme,tse,W,Theta,terr] = daexp_digits(clf,prep,varargin)
+% Function to run some da experiments on the MNIST vs SEMEION vs USPS datasets
 
 % Parse hyperparameters
 p = inputParser;
@@ -19,19 +19,21 @@ fc = p.Results.fc;
 
 % Load data
 try
-    load('/home/nfs/wkouw/amazon.mat');
+%     load('/home/nfs/wkouw/da_digits2.mat')
+    load('/home/nfs/wkouw/da_digits_smaller.mat');
 catch
-    load('/home/wmkouw/Data/Amazon/amazon.mat');
+%     load('/home/wmkouw/Data/MNIST/da_digits2.mat');
+    load('/home/wmkouw/Data/MNIST/da_digits_smaller.mat');
 end
 
 % In case of feature curve experiment, sample given features
-if ~isempty(fc); sX = sX(fc,:); end
+if ~isempty(fc); X = X(:,fc); end
 
-% Map labels to [1,2]
-y(y==-1) = 2;
+% Map labels to [1,..K]
+y = y+1;
 
 % Preprocess counts
-sX = da_prep(sX,prep);
+X = da_prep(X',prep);
 
 % Loop trough pairwise da combinations
 lD = length(domain_names);
@@ -52,8 +54,8 @@ for cc = 1:lCmb;
     % Slice source and target
     ixQ = domains(cmb(cc,1))+1:domains(cmb(cc,1)+1);
     ixP = domains(cmb(cc,2))+1:domains(cmb(cc,2)+1);
-    XQ = [sX(:,ixQ); ones(1,length(ixQ))];
-    XP = [sX(:,ixP); ones(1,length(ixP))];
+    XQ = [X(:,ixQ); ones(1,length(ixQ))];
+    XP = [X(:,ixP); ones(1,length(ixP))];
     yQ = y(ixQ);
     yP = y(ixP);
     
@@ -64,7 +66,7 @@ for cc = 1:lCmb;
         else
             [W{cc},Theta{cc},terr{cc}] = da_crossval_within(clf,XQ,yQ,'nR',nR,'nF',nF,'l2',l2);
         end
-    else    
+    else
         % Run a crossvalidation procedure on between-domain combination
         if p.Results.par;
             [W{cc},Theta{cc},terr{cc}] = da_crossval_between_par(clf,XQ,yQ,XP,yP,'nR',nR,'nF',nF,'l2',l2);
@@ -80,9 +82,9 @@ for cc = 1:lCmb;
 end
 
 if p.Results.save;
-	% Write intermediate results
+    % Write intermediate results
     if ~iscell(prep); prep = {prep}; end
-    fname = ['daexp_amazon_xval_'  clf '_' prep{:} '_' ...
+    fname = ['daexp_digits_xval_'  clf '_' prep{:} '_' ...
         domain_names{cmb(cc,1)} '_' domain_names{cmb(cc,2)} '.mat'];
     save(fname, 'tme','tse','terr','Theta','W', 'cmb', 'l2');
 end

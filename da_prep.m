@@ -19,6 +19,10 @@ end
 
 for i = 1:length(prep)
     switch prep{i}
+        case 'binarize'
+            X(X>=0.5) = 1;
+            X(X<0.5) = 0;
+            disp(['Binarized the data (X>0.5=1, X<0.5=0)']);
         case 'zscore'
             X = bsxfun(@minus, X, mean(X,2));
             X = bsxfun(@rdivide, X, var(X, 0, 2));
@@ -35,7 +39,7 @@ for i = 1:length(prep)
             disp(['Capped each feature at 1']);
         case 'fsum'
             X = bsxfun(@rdivide, X, sum(X, 2));
-            disp(['Normalized each feature']);
+        disp(['Normalized each feature']);
         case 'norm_samp'
             X = bsxfun(@rdivide, X, sqrt(sum(X.^2,1)));
             disp(['Normalized each sample by their norm']);
