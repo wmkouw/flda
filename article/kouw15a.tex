@@ -34,20 +34,20 @@
 \author{\name Wouter Kouw \email W.M.Kouw@tudelft.nl \\
        \addr Department of Intelligent Systems\\
        Delft University of Technology\\
-       Mekelweg 6, 2628CD, the Netherlands \\
+       Mekelweg 6, 2628 CD, The Netherlands \\
        \AND
        \name Jesse Krijthe \email J.H.Krijthe@tudelft.nl \\
        \addr Department of Intelligent Systems\\
        Delft University of Technology\\
-       Mekelweg 6, 2628 CD Delft, the Netherlands \\
+       Mekelweg 6, 2628 CD Delft, The Netherlands \\
        \addr Department of Epidemiology \\
        Leiden University Medical Center \\
-       Albinusdreef 2, 2333 ZA Leiden, the Netherlands \\
+       Albinusdreef 2, 2333 ZA Leiden, The Netherlands \\
        \AND
        \name Marco Loog \email M.Loog@tudelft.nl \\
        \addr Department of Intelligent Systems\\
        Delft University of Technology\\
-       Mekelweg 6, 2628 CD Delft, the Netherlands \\
+       Mekelweg 6, 2628 CD Delft, The Netherlands \\
        \addr The Image Group \\
 	IT University of Copenhagen \\
 	Rued Langgaards Vej 7, 2300 Copenhagen S, Denmark \\
@@ -55,8 +55,7 @@
        \name Laurens van der Maaten \email L.J.P.Vandermaaten@tudelft.nl \\
        \addr Department of Intelligent Systems\\
        Delft University of Technology\\
-       Mekelweg 6, 2628 CD Delft, the Netherlands \\
-	\addr Facebook Research
+       Mekelweg 6, 2628 CD Delft, The Netherlands
 }
 
 \editor{Leslie Pack Kaelbling}
@@ -64,7 +63,7 @@
 \maketitle
 
 \begin{abstract}%   <- trailing '%' for backward compatibility of .sty file
-Domain adaptation is a supervised learning problem where the training and test data come from different distributions. In this paper we study a classifier that assumes a particular dependence between two domains. Modeling that dependence with a conditional Bernoulli	 distribution leads to adapting to the relative importance of features. We show that if the model is correct, the adapted classifier is equivalent to the target classifier. Applying it to real-world datasets shows that it competes well with popular adaptation strategies.
+Domain adaptation is a supervised learning problem in which the training and test data originate from different distributions. In this paper, we study a classifier that assumes a particular dependence between two domains. Modeling that dependence with a conditional Bernoulli	 distribution allows the classifier to adapt to the relative importance of features. We show that if the model assumptions are correct, the adapted classifier is equivalent to the target classifier. Experiments with our classifier on real-world domain adaptation problems show that it performs on par with popular alternative domain-adaptation strategies.
 \end{abstract}
 
 \begin{keywords}
@@ -73,17 +72,17 @@ Domain adaptation, transfer learning, covariate shift, empirical risk minimizati
 
 \section{Introduction}
 
-In supervised learning, classifiers learn from labeled samples and predict labels of new samples. It is implicitly assumed that these new samples come from the same distribution as the already observed ones. However, this assumption often does not hold. For example, a classifier that has learned to recognize one person's speech can not easily recognize another. Their sound patterns have different statistics (\citealp{leggetter1995maximum}). 
+In supervised learning, classifiers learn from labeled samples and predict labels of new samples. Oftentimes, it is assumed that these new samples originate from the same distribution as the already observed samples. However, this assumption often does not hold in practice. For example, a classifier that has learned to recognize one person's speech can not easily recognize speech uttered by another person, as the sound patterns have different statistics (\citealp{leggetter1995maximum}). 
 
-A common occurence of this problem is when we have a specific method of gathering data. Classifiers trained on these measurements do not generalize to other acquisition methods. For example, training a classifier to segment images from one MRI scanner does not imply that it will perform well on a different scanner (\citealp{van2013transfer}). The scanning protocols and mechanical specifications ensure that the intensity values are distributed differently over voxels.
+A common occurrence of this problem is when we have a specific method of gathering data. Classifiers trained on these measurements do not generalize to other acquisition methods. For example, training a classifier to segment images from one MRI scanner does not imply that it will perform well on a different scanner (\citealp{van2013transfer}). The scanning protocols and mechanical specifications ensure that the intensity values are distributed differently over voxels.
 Another example is object recognition in computer vision (\citealp{saenko2010adapting}). If training images have been taken with one camera and testing images with another, the pixel intensity distributions may differ due to lens or exposure settings.
-In natural language processing it is hard to classify movie reviews after training on tweets due to the informal word usage (\citealp{peddinti2011domain}). As for bioinformatics, integrating genome sequence data from multiple acquisition centers can also be considered a domain adaptation problem, because cells are subject to different laboratory conditions (\citealp{borgwardt2006integrating}). 
+In natural language processing, it is hard to classify movie reviews after training on tweets due to the informal word usage (\citealp{peddinti2011domain}). In bioinformatics, integrating genome sequence data from multiple acquisition centers can also be considered a domain adaptation problem, because cells are subject to different laboratory conditions (\citealp{borgwardt2006integrating}). 
 
-In each of these cases the bias in the sampling procedure leads to different probabilities over the same events. Transfer learning is the general term to any learning problem where the test and training data are assumed to originate from different distributions. If both sets are measured using the same features, the problem is referred to as domain adaptation. Each distribution over the same set of events is then a domain, where the labeled one is referred to as a source and the unlabeled one as a target.
+In each of these cases, the bias in the sampling procedure leads to different probabilities over the same events. Transfer learning is the general term to any learning problem in which the test and training data are assumed to originate from different distributions. If both sets are measured using the same features, the problem is referred to as domain adaptation. Each distribution over the same set of events is then a domain, where the labeled one is referred to as a source domain and the unlabeled one as a target domain.
 
-The problem is closely related to a number of other problems. Whenever target labels are available during training, there are in fact two related supervised learning problems, which makes it a multi-task learning problem (\citealp{pan2010survey, moreno2012unifying}). If an oracle is available that is capable of assigning labels to target samples, then it is an active learning problem (\citealp{cohn1996active}), and if the distribution of the target samples changes for small batches, then it should be treated as an online learning problem (\citealp{ma2009identifying}). 
+The domain-adaptation problem is closely related to a number of other problems. Whenever target labels are available during training, there are in fact three related supervised learning problems, which makes it a multi-task learning problem (\citealp{pan2010survey, moreno2012unifying}). If an oracle is available that is capable of assigning labels to target samples, then it is an active learning problem (\citealp{cohn1996active}), and if the distribution of the target samples changes for small batches, then it should be treated as an online learning problem (\citealp{ma2009identifying}). 
 
-In some situations multiple domains are available for training (\citealp{mansour2009domaina}). More information allows for a wider range of strategies, but it also introduces more complexity as the influence of each domain has to be weighted. In this paper we restrict ourselves to pairwise combinations of training on one domain and testing on another.
+In some situations multiple domains are available for training (\citealp{mansour2009domaina}). More information allows for a wider range of strategies, but it also introduces more complexity as the influence of each domain has to be weighted. In this paper, we restrict ourselves to pairwise combinations of training on one domain and testing on another.
 
 Our method looks at how two domains are dependent on each other and incorporates the modeled dependency in our classification model.
 
@@ -94,50 +93,48 @@ Our method looks at how two domains are dependent on each other and incorporates
 
 There is a theoretical result by \cite{shimodaira2000improving} that rewrites the expected classification error in the target domain as a function of the source domain and a weighting factor for each event: $R= \int_{X} \int_{Y} \frac{p_{Z,Y}(x,y)}{p_{X,Y}(x,y)} \ \big[-\log p_{Y|X}(y|x)\big] \ \mathrm{d}y \ \mathrm{d}x$. It reduces the likelihood of source samples that are very dissimilar from the target samples and increases the likelihood of samples that are similar. However, no information is available on the target joint distribution. If the assumption is made that the posteriors $p_{Y|Z}(y|x)=p_{Y|X}(y|x)$ are equal, the reweighting factor reduces to $\frac{p_{Z}(x)}{p_{X}(x)}$. Learning with this assumption is referred to as \emph{covariate shift} and is very appealing as it converges to the target classifier in the limit. 
 
-In the original paper the data is assumed to be Gaussian and these probabilities are evaluated after maximum likelihood fitting of Gaussian distributions on each domain. However, the inversion of one of these covariance matrices is very expensive for high-dimensional datasets. Alternatively, one can also train a classifier to discriminate the two domains and use the posterior probabilities as the reweighting factor. 
+In the original paper, the data is assumed to be Gaussian and these probabilities are evaluated after maximum likelihood fitting of Gaussian distributions on each domain. However, the inversion of one of these covariance matrices is very expensive for high-dimensional datasets. Alternatively, one can also train a classifier to discriminate the two domains and use the posterior probabilities as the reweighting factor. 
 
 The estimation of the weights in general is very sensitive to how dissimilar the two domains are. If the probability masses of both domain distributions lie far apart, it leads to very small weights for a large number of samples and very large weights for a select few. This means the classifier will often find poor solutions. \cite{ben2010impossibility} also shows that for particular types of dissimilarities, covariate shift is not a sufficient condition for successful learning. Our approach does not rely on reweighing instances and is not sensitive to estimation errors in the weights.
 
-A different weight estimation method, proposed by \cite{huang2007correcting} and \cite{gretton2009covariate}, relies on the maximum mean discrepancy between two distributions: $\text{MMD}(x,y) = \underset{h \in \mathcal{H}}{\max} \ | \ \mathbb{E}[h(x)] - \mathbb{E}[h(y)] \ |$. This discrepancy roughly states that two distributions are similar if the distance between the moments is small for any smooth continuous function applied to both sets of samples. If an appropriate function class is chosen, such as the reproducing kernel Hilbert space, it is possible to find weights that minimize the empirical MMD (\citealp{borgwardt2006integrating}). The approach is referred to as kernel mean matching and is less prone to downweighing a large number of samples. It is however computationally expensive, as it requires solving an optimization problem that is quadratic in the number of samples. 
+A different weight estimation method, proposed by \cite{huang2007correcting} and \cite{gretton2009covariate}, relies on the maximum mean discrepancy between two distributions: $\text{MMD}(x,y) = \underset{h \in \mathcal{H}}{\max} \ | \ \mathbb{E}[h(x)] - \mathbb{E}[h(y)] \ |$. This discrepancy roughly states that two distributions are similar if the distance between the moments is small for any smooth continuous function applied to both sets of samples. If an appropriate function class is chosen, such as the reproducing kernel Hilbert space, it is possible to find weights that minimize the empirical MMD (\citealp{borgwardt2006integrating}). The approach is referred to as kernel mean matching and is less prone to downweighting a large number of samples. It is however computationally expensive, as it requires solving an optimization problem that is quadratic in the number of samples. 
 
 \cite{blitzer2006domain} have proposed structural correspondence learning, a method that augments the data with a domain-invariant subspace. In order to create the subspace, one starts with identifying a set of features that are used frequently in both domains, referred to as the \emph{pivot} features. The goal then is to learn a mapping from the data in both domains to these features through a binary classification problem for each pivot feature. The domain-invariant subspace then consists of the $h$ principal components of the eigendecomposition of the mapping.
 
-The succes of structural correspondence learning is heavily dependent on identifying features that are appropriate pivots. The authors indicate to look for features that are very frequent in both domains, but that does not imply that there are discrimative features in both domains that correlate with it. Our approach also relies on the frequency of feature use, but is not dependent on finding a correspondence with features that are discriminative in their own domain.
+The succes of structural correspondence learning is heavily dependent on identifying features that are appropriate pivots. The authors indicate to look for features that are very frequent in both domains, but that does not imply that there are discriminative features in both domains that correlate with it. Our approach also relies on the frequency of feature use, but is not dependent on finding a correspondence with features that are discriminative in their own domain.
 
-In this paper we are interested in what classifiers we obtain if we make a different assumption than covariate shift. More specifically, we assume that the two domains are dependent and that the labels are conditionally independent given the observations in one domain. This can be interpreted as a transformation of labeled source samples into labeled target samples. If we incorporate this assumption in our classification model, we obtain a classifier that can adapt to this transformation.
+In this paper, we are interested in what classifiers we obtain if we make a different assumption than covariate shift. More specifically, we assume that the two domains are dependent and that the labels are conditionally independent given the observations in one domain. This can be interpreted as a transformation of labeled source samples into labeled target samples. If we incorporate this assumption in our classification model, we obtain a classifier that can adapt to this transformation.
 
 \section{Feature Importance Regularization}
-Formally, domains are defined here to be random variables on the same sample space $\Omega$ and event set $\mathcal{F}$, but with different probability measures $\mathcal{Q}$ and $\mathcal{P}$. We refer to the random variables associated with these probability spaces as $X$ on $(\Omega, \mathcal{F}, \mathcal{Q})$ and ${Z}$ on $(\Omega, \mathcal{F}, \mathcal{P})$. Usually, we refer to a \emph{source} domain if we have both data and labels $\{{\bf x_{i}}, y_{i}\}$ for  $i = 1,...N_{X}$ and a \emph{target} domain if we're interested in predicting the labels $\{{\bf z_{j}}\}$ for $j = 1,...N_{Z}$. Probability distributions will have subscripts that designate to which random variable they belong, for example $p_{X}(x)$. Note that we assume here that both domains lie on the same feature space, ${\bf x_{i}, z_{j}} \in \mathbb{R}^{M}$. If this is not the case, then it is necessary to map both domains to a common representation. There has been extensive research in this area, but it is outside the scope of this paper (\citealp{ben2007analysis, shao2014generalized}). 
+Formally, domains are defined here to be random variables on the same sample space $\Omega$ and event set $\mathcal{F}$, but with different probability measures $\mathcal{Q}$ and $\mathcal{P}$. We refer to the random variables associated with these probability spaces as $X$ on $(\Omega, \mathcal{F}, \mathcal{Q})$ and ${Z}$ on $(\Omega, \mathcal{F}, \mathcal{P})$. Usually, we refer to a \emph{source} domain if we have both data and labels $\{{\bf x_{i}}, y_{i}\}$ for  $i = 1,\dots,N_{X}$ and a \emph{target} domain if we are interested in predicting the labels of instances $\{{\bf z_{j}}\}$ for $j = 1,\dots,N_{Z}$. Probability distributions will have subscripts that designate to which random variable they belong, for example $p_{X}(x)$. Note that we assume here that both domains lie on the same feature space, ${\bf x_{i}, z_{j}} \in \mathbb{R}^{M}$. If this is not the case, then it is necessary to map both domains to a common representation. There has been extensive research in this area, but it is outside the scope of this paper (\citealp{ben2007analysis, shao2014generalized}). 
 
 \subsection{Target risk function}
-The empirical risk minimization framework studies the expectation of a loss function, or \emph{risk}, to evaluate a hypothetical classification function $f$. Here we shall express the risk in the target domain as a function of the source domain and a conditional distribution. Note that $Z,X$ are the random variables for the target and the source domain, respectively.
+The empirical risk minimization framework studies the expectation of a loss function, or \emph{risk}, to evaluate a hypothetical classification function $f$. Here we shall express the risk in the target domain as a function of the source domain and a conditional distribution: 
 \begin{align}
 R =& \int_{Z}\int_{Y}\ell(f(z),y) \ p_{Y,Z}(y,z) \ \mathrm{d}y \ \mathrm{d}z  & \nonumber \\
 R=& \int_{Z}\int_{Y}\int_{X} \ell(f(z),y) \ p_{Y,Z,X}(y,z,x) \ \mathrm{d}x \ \mathrm{d}y \ \mathrm{d}z & \nonumber \\
 R =& \int_{Z}\int_{Y}\int_{X} \ \ell(f(z),y) \ p_{Y|Z,X}(y|z,x) \ p_{Z|X}(z|x)  \ p_{X}(x) \ \mathrm{d}x \ \mathrm{d}y \ \mathrm{d}z & \nonumber 
 \end{align}
-If we assume conditional independence of the labels and target data given source data: $Y \ci Z | X$, we can further simplify to:
+Herein, $Z$ and $X$ are the random variables for the target and the source domain, respectively. If we assume conditional independence of the labels and target data given source data: $Y \ci Z | X$, we can further simplify the expression to:
 \begin{align}
 R =& \int_{Z}\int_{Y}\int_{X} \ \ell(f(z),y) \ p_{Y|X}(y|x) \ p_{Z|X}(z|x)  \ p_{X}(x) \ \mathrm{d}x \ \mathrm{d}y \ \mathrm{d}z &  \nonumber \\
 R =& \int_{Z} \mathbb{E}_{p_{Y,X}}\left[ \ \ell(f(z),y) \ p_{Z|X}(z|x) \ \right] \ \mathrm{d}z & \label{new_risk} 
 \end{align}
-The expectation can be approximated with source data $\{(x_{i},y_{i})\}$ for $i=1,.. , N_{X}$:
+The expectation can be approximated with source data $\{(x_{i},y_{i})\}$ for $i=1,\dots, N_{X}$:
 \begin{align}
 R(x,y) \approx &\  \int_{Z} \frac{1}{N_{X}} \ \sum_{i}^{N_{X}} \ell(f(z),y_{i}) p_{Z|X} (z|x_{i}) \ \mathrm{d}z \label{emp_risk}
 \end{align}
 
-Note that the conditional distribution in (\ref{new_risk}) has changed from conditionial on any sample in the source domain $p_{Z|X}(z|x)$ to being conditional on a specific sample $x_{i}$; $p_{Z|X}(z|x_{i})$ (\ref{emp_risk}). Such a conditional can be thought of as a probability distribution centered on each sample, for example $\mathcal{N}(z| x_{i}, \sigma^{2})$. \cite{bishop1995training} has shown that for specifically a Gaussian distribution, the least-squares formulation can be rewritten as ridge regression: $\int_{Z} N_{X}^{-1} \ \sum_{i}^{N_{X}} (y_{i}-{\bf w^{\top}z})^{2} \mathcal{N}({\bf z|x}_{i}, \sigma^{2}) \ \mathrm{d}z = N_{X}^{-1} \ \sum_{i}^{N_{X}} (y_{i}-{\bf w^{\top}x}_{i})^{2} + \sigma^{2}\|{\bf w} \|^{2}$. In his paper, he interprets this finding as \emph{noise} in the measurements. Here we assume that this conditional distribution reflects the change in probability of an event in the target domain, given that event in the source domain. In this interpretation, we denote this conditional distribution as the \emph{transfer} distribution. 
+Note that the conditional distribution in (\ref{new_risk}) has changed from conditional on any sample in the source domain $p_{Z|X}(z|x)$ to being conditional on a specific sample $x_{i}$; $p_{Z|X}(z|x_{i})$ (\ref{emp_risk}). Such a conditional can be thought of as a probability distribution centered on each sample, for example $\mathcal{N}(z| x_{i}, \sigma^{2})$. \cite{bishop1995training} has shown that when this conditional distribution is Gaussian and the loss is a quadratic function, Equation (\label{emp_risk}) reduces to standard ridge regression: $\int_{Z} N_{X}^{-1} \ \sum_{i}^{N_{X}} (y_{i}-{\bf w^{\top}z})^{2} \mathcal{N}({\bf z|x}_{i}, \sigma^{2}) \ \mathrm{d}z = N_{X}^{-1} \ \sum_{i}^{N_{X}} (y_{i}-{\bf w^{\top}x}_{i})^{2} + \sigma^{2}\|{\bf w} \|^{2}$. In this paper, we assume that the conditional distribution reflects the probability of an event in the target domain, given that event in the source domain. In other words, the conditional distribution can be viewed as the \emph{transfer} distribution. 
 
-Our main assumption is that the target data is conditionally independent of the labels given the source data ($Z \ci Y | X$). Because we can calculate the distribution over the target data using $p_{Z|X}(z|x)$ and the distribution over the labels using $p_{Y|X}(y|x)$, observing the target data will not add information on the label distribution. 
-
-It can be interpreted as the fact that if we transform the source data, the labels transform along with them. It is different from covariate shift, because it implies that the posteriors are not equal $p_{Y|X}(y|x) \neq p_{Y|Z}(y|z)$. For problems that we will encounter where this assumption is valid, we can successfully adapt and outperform a naive classifier.
+Our main assumption in the paper is that the target data is conditionally independent of the labels given the source data ($Z \ci Y | X$). Because we can calculate the distribution over the target data using $p_{Z|X}(z|x)$ and the distribution over the labels using $p_{Y|X}(y|x)$, observing the target data will not add information on the label distribution.  This can be interpreted as the fact that if we transform the source data, the labels transform along with them. It should be noted that this assumption is different from covariate shift, because it implies that the posteriors are not equal $p_{Y|X}(y|x) \neq p_{Y|Z}(y|z)$. For problems that we will encounter where this assumption is valid, we can successfully adapt and outperform a naive classifier.
 
 \subsection{Classification}
-The empirical risk (\ref{emp_risk}) is dependent on choosing a loss function $\ell$. Some popular choices are the quadratic loss (used in least-squares regression), the exponential loss (used in boosting), the hinge loss (used in support vector machines) and the logistic loss (used in generalized linear models). The formulation in (\ref{emp_risk}) has been studied before in the context of \emph{dropout training} for the quadratic and logistic loss by \cite{wager2013dropout} and \cite{rostamizadeh2011learning}, and hinge loss by \cite{chen2014dropout}. It was extended for the exponential loss in the context of \emph{corruption} distributions by \cite{van2013learning}. Here we chose to employ the quadratic loss and the logistic loss for computational reasons.
-Throughout this paper, we will focus on the class of linear functions $f({\bf x}) = {\bf w^{\top}x}$.
+The empirical risk (\ref{emp_risk}) is dependent on choosing a loss function $\ell$. Some popular choices are the quadratic loss (used in least-squares regression), the exponential loss (used in boosting), the hinge loss (used in support vector machines) and the logistic loss (used in generalized linear models). The formulation in (\ref{emp_risk}) has been studied before in the context of \emph{dropout training} for the quadratic, exponential, and logistic loss by \cite{wager2013dropout,van2013learning}, and for hinge loss by \cite{chen2014dropout}. Here we selected to study the quadratic loss and the logistic loss for computational reasons. % LAURENS: Dit is onlogisch, want exponential is veel sneller dat logistic!
+Throughout this paper, we will focus on the class of linear functions $f({\bf x}) = {\bf w^{\top}x}$. % LAURENS: \cite{rostamizadeh2011learning} is een imputation algorithm dat niet naar expected values kijkt
 
 \subsubsection{Quadratic loss}
-The quadratic loss $l(f({\bf x}),y)=(y-{\bf w}^{\top}{\bf x})^{2}$ is an interesting choice, because the expectation is analytically tractable and the gradient has a closed-form solution.
+For the quadratic loss $l(f({\bf x}),y)=(y-{\bf w}^{\top}{\bf x})^{2}$, the expectation in (\ref{emp_risk}) is analytically tractable and the gradient has a closed-form solution:
 \begin{align}
 	R({\bf x},{\bf y}) =& \int_{Z} \frac{1}{N_{X}}\sum_{i}^{N_{X}} (y_{i}-{\bf w}^{\top} {\bf z})^{2} \ p_{Z|X}({\bf z}|{\bf x}_{i}) \ \mathrm{d}{\bf z} \nonumber \\
 	=& \  {\bf y^{\top}y} - 2{\bf w}^{\top}\mathbb{E}_{\tilde{p}}[{\bf z]y} + {\bf w}^{\top}\mathbb{E}_{\tilde{p}}[{\bf z}]\mathbb{E}_{\tilde{p}}[{\bf z]^{\top}w}   + {\bf w}^{\top}\mathbb{V}_{\tilde{p}}[{\bf z]w} \label{qd_loss}
@@ -153,7 +150,8 @@ The logistic loss stems from the negative log-likelihood of generalized linear m
 	R({\bf x},{\bf y}) =& \int_{Z} \frac{1}{N_{X}} \sum^{N_{X}}_{i} \big[-y_{i}{\bf w}^{\top}{\bf z} + \log\sum_{y'} \exp(-y'{\bf w}^{\top}{\bf z}) \big] \ p_{Z|X}({\bf z}|{\bf x}_{i}) \ \mathrm{d}{\bf z} \nonumber \\
 	=& \ \frac{1}{N_{X}} \sum_{i}^{N_{X}} - y_{i}{\bf w}^{\top}\mathbb{E}_{\tilde{p}}[{\bf z}] + \mathbb{E}_{\tilde{p}}\big[\log \sum_{y'} \exp( y'{\bf w}^{\top}{\bf z})\big] 
 \end{align}
-Because of the nonlinearity, we can no longer calculate the expectation analytically. But as in \cite{wager2013dropout}, we approximate the expectation of the log-partition function using a Taylor expansion around the inner product of the weights and the data. Note that this generalizes to $K$ classes if we take an $M \times K$ weight matrix ${\bf W}$. The loss is then approximately:
+Because of the nonlinearity, we can no longer calculate the expectation analytically. % LAURENS: Quadratic loss heeft ook een non-linearity en daar gaat het prima?!
+But as in \cite{wager2013dropout}, we approximate the expectation of the log-partition function using a Taylor expansion around the inner product of the weights and the data. Note that this generalizes to $K$ classes if we take an $M \times K$ weight matrix ${\bf W}$. The loss is then approximately:
 \begin{align}
 R({\bf x},{\bf y}) \approx& \ \frac{1}{N_{X}} \sum_{i}^{N_{X}} - y_{i}{\bf w}^{\top}\mathbb{E}_{\tilde{p}}[{\bf z}] + \log \sum_{y'} \exp( y'{\bf w}^{\top}{\bf x}_{i}) + \nonumber \\
 & \frac{\sum_{y'} y'\exp(y'{\bf w}^{\top}{\bf x}_{i})}{\sum_{y'}\exp(y'{\bf w}^{\top}{\bf x}_{i})}{\bf w}^{\top}(\mathbb{E}_{\tilde{p}}[{\bf z}]-{\bf x}_{i}) + \nonumber \\
@@ -167,14 +165,14 @@ with the gradient as:
 & 4\sigma \big(-2{\bf w^{\top}x_{i}}\big)\sigma \big(2{\bf w^{\top}x}_{i}\big)\Big[\Big(\big(\sigma(-2{\bf w}^{\top}{\bf x}_{i}) - \sigma(2{\bf w}^{\top}{\bf x}_{i})\big){\bf x}_{i}{\bf w}^{\top} + 1\Big) \nonumber \\
 & \Big(\mathbb{V}_{\tilde{p}}[{\bf z}] + (\mathbb{E}_{\tilde{p}}[{\bf z}]-{\bf x}_{i})(\mathbb{E}_{\tilde{p}}[{\bf z}]-{\bf x}_{i})^{\top} \Big){\bf w}\Big]
 \end{align}
-Here we don't obtain a closed-form solution, but the gradient is convex and one can use an iterative optimization algorithm to find ${\bf w}^{*}$.
+Here we do not obtain a closed-form solution, but the gradient is convex and one can use an iterative optimization algorithm to find ${\bf w}^{*}$.
 
 \subsection{Transfer distribution}
 The new formulation of the target risk (\ref{new_risk}) states that an adapted classifier trained on source samples can be equivalent to a classifier trained on the target samples, if the underlying transfer distribution is found.
 
 Our strategy is based on proposing a source, target and transfer distribution from an appropriate family of distributions and fitting them to the data. First, the source and target data, $\hat{p}_{Z}(z)$ and $\hat{p}_{X}(x)$,are modeled using maximum likelihood fitting. Then, the joint distribution of the source and the transfer model is taken where we marginalize over the source domain, $\int_{X} p_{Z|X}(z|x, \theta) \ \hat{p}_{X}(x) \ \mathrm{d}x$. Finally, the divergence between the marginalized joint and the target model is minimized with respect to the transfer parameters $\theta$.
 
-The choice of a family of distributions to model the transfer will determine if the classifier can appriopriately adapt. Here we focus on how often features are used in sparse nonnegative data, with the assumption that features that are used less frequently in the target domain are also less important there. For this dependence we study Bernoulli distributions but for continuous data it would be wiser to study a different choice of distributions.
+The choice of a family of distributions to model the transfer will determine if the classifier can appropriately adapt. Here, we focus on how often features are used in sparse nonnegative data, with the assumption that features that are used less frequently in the target domain are also less important there. For this dependence we study Bernoulli distributions but for continuous data it would be wiser to study a different choice of distributions.
 
 There are a number of settings where differences in the relative importance of a feature occur. In natural language processing, if a feature is absent in a target sample, it means that the writer has not used that word in the document. Similarly, any visual bag-of-words representation for image processing relies on histograms, which can also have bins that are used less frequently in the target domain. 
 
@@ -230,9 +228,9 @@ Note that $\theta_m$ is also a rate parameter and is therefore bounded in $[0,1]
 \end{align}
 
 \section{Experiments}
-In these experiments the behaviour of the {\sc fir} classifier is studied under a controlled setting, followed by an evaluation on five real-world datasets reflecting common domain adaptation settings.
+In these experiments the behavior of the {\sc fir} classifier is studied under a controlled setting, followed by an evaluation on five real-world datasets reflecting common domain adaptation settings.
 
-\subsection{Artifical datasets}
+\subsection{Artificial datasets}
 In order to create an artificial domain adaptation problem, we generate a dataset by sampling from Bernoulli distributions that reflect class-conditional likelihoods in the source domain. The target domain can then be constructed by transforming the source data using a known transfer distribution. This also gives us the true transfer parameters.
 
 \subsubsection{Convergence}
@@ -248,7 +246,7 @@ The source data is transformed using a Bernoulli transfer distribution, where we
 \label{art1}
 \end{figure}
 
-Interestingly, if we generate datasets from different distributions, such as Poissons, and estimate the transfer parameters through dummy variables, the classifier also converges to the naive target classifier (see figure \ref{art2}). Successful adaptation does not depend on the data, but on our ability to estimate the appropriate transfer distribution. 
+Interestingly, if we generate datasets from different distributions, such as a Poisson distribution, and estimate the transfer parameters through dummy variables, the classifier also converges to the naive target classifier (see figure \ref{art2}). Successful adaptation does not depend on the data, but on our ability to estimate the appropriate transfer distribution. 
 
 \begin{figure}[ht]
 \centering
@@ -285,16 +283,16 @@ In this experiment, we study how fast classification error deteriorates as we in
 \subsection{Natural datasets}
 We have selected a number of domain adaptation problems consisting of nonnegative integer data, either in a (visual) bag-of-words representation or pixel intensities (between 0 and 255). They are typical scenarios where we believe a Bernoulli transfer occurs. Three are natural language based and two are based on images.
 
-We compare our {\sc fir} classifier with 3 competing methods; {\sc irw}, {\sc kmm} and {\sc scl}. To faciliate a fair evaluation of the adaption method, we train all methods using the same loss function. This is to ensure that performance measures do not depend on the classifier's flexibility or complexity. In order to compare the performance of an adapted classifier, we train and test classifiers on the same domain as well. The error rates for within-domain combinations can be considered the target classifiers and would represent the best performance the adapted classifier should be able to obtain.
+We compare our {\sc fir} classifier with 3 competing methods; {\sc irw}, {\sc kmm} and {\sc scl}. To facilitate a fair evaluation of the adaption method, we train all methods using the same loss function. This is to ensure that performance measures do not depend on the classifier's flexibility or complexity. In order to compare the performance of an adapted classifier, we train and test classifiers on the same domain as well. The error rates for within-domain combinations can be considered the target classifiers and would represent the best performance the adapted classifier should be able to obtain.
 
 %For the subspace alignment (sa) method, the number of eigenvectors we keep is 100. The choice of the size of the subspace is important, but since the eigenvalue decomposition is computationally very expensive for high-dimensional datasets, we feel this is a fair parameter choice. 
-For structural correspondence learning ({\sc scl}), as pivots we took the 30 features that were most frequent in both domains. Their values are predicted based on all features of both domains using a modified Huber loss, as in (\citealp{ando2005framework}). The $25$ first principal components of the predictors form the subspace with which both domains are augmented. For our standard instance reweighting method ({\sc irw}) weights are estimated by computing the posterior domain probability using a logistic classifer. For kernel mean matching ({\sc kmm}), a radial basis function kernel was used. 
+For structural correspondence learning ({\sc scl}), as pivots we took the 30 features that were most frequent in both domains. Their values are predicted based on all features of both domains using a modified Huber loss, as in (\citealp{ando2005framework}). The $25$ first principal components of the predictors form the subspace with which both domains are augmented. For our standard instance reweighting method ({\sc irw}) weights are estimated by computing the posterior domain probability using a logistic classifier. For kernel mean matching ({\sc kmm}), a radial basis function kernel was used. 
 
 \subsubsection{Crossvalidation}
-The goal of the classifier is to generalize well to new samples. In order to obtain a measure of generalization, we perform 3 repeats of 3-fold crossvalidation. This is a standard procedure for training and testing on the same domain. But for transfer learning, crossvalidation becomes trickier. If we split the training dataset in folds, we obtain a classifier that generalizes better to unseen source samples. However, that is not what we are interested in. The goal is to generalize better to unseen target samples. Therefore, we split the target data in folds where we hold out 1 fold for validation and use the remaining folds for estimating the transfer parameters. 
+The goal of the classifier is to generalize well to new samples. In order to obtain a measure of generalization, we perform 3 repeats of 3-fold cross-validation. This is a standard procedure for training and testing on the same domain. But for transfer learning, cross-validation becomes trickier. If we split the training dataset in folds, we obtain a classifier that generalizes better to unseen source samples. However, that is not what we are interested in. The goal is to generalize better to unseen target samples. Therefore, we split the target data in folds where we hold out 1 fold for validation and use the remaining folds for estimating the transfer parameters. 
 
 \subsubsection{Amazon}
-The Amazon sentiment analysis dataset is a popular domain adaptation set and consists of written product reviews, first used in \cite{blitzer2007biographies}. The data is a 30 000 dimensional bag-of-words representation of 27677 reviews with the labels derived from the binarized 5-star rating. Each review is based on a product from one of four categories: books, dvds, electronics and kitchen appliances. Since people tend to use different words to describe liking a book versus liking a gadget, the product categories are the domains. 
+The Amazon sentiment analysis dataset is a popular domain adaptation set and consists of written product reviews, first used in \cite{blitzer2007biographies}. The data is a 30 000 dimensional bag-of-words representation of 27677 reviews with the labels derived from the binarized 5-star rating. Each review is based on a product from one of four categories: books, DVDs, electronics and kitchen appliances. Since people tend to use different words to describe liking a book versus liking a gadget, the product categories are the domains. 
 
 Figure \ref{eg_amazon} shows the normalized frequencies of some example words. It can be seen that some words are only used in one domain and these are the ones that we want to regularize heavily during training.
 
@@ -305,22 +303,22 @@ Figure \ref{eg_amazon} shows the normalized frequencies of some example words. I
 \label{eg_amazon}
 \end{figure}
 
-In figure \ref{err_amazon} we report the mean misclassification errors of each repeat of the crossvalidation procedure on all pairwise combinations of domains. The figure is set up in a grid where the row label indicates the source domain and the column label the target domain. The results indicate that none of the classifiers consistently outperforms the others. There are a few combinations where the adapted classifiers perform worse than the naive one, indicating that there are complex dependencies between these domains that are not accurately captured.
+In figure \ref{err_amazon} we report the mean misclassification errors of each repeat of the cross-validation procedure on all pairwise combinations of domains. The figure is set up in a grid where the row label indicates the source domain and the column label the target domain. The results indicate that none of the classifiers consistently outperforms the others. There are a few combinations where the adapted classifiers perform worse than the naive one, indicating that there are complex dependencies between these domains that are not accurately captured.
 
 \begin{figure}[ht]
 	\centering
 	\includegraphics[width=.9\textwidth]{images/err_amazon_box.eps} 	
-	\caption{Box plots of the mean classification error of the repeats of the crossvalidation procedure. The dotted black line is the mean classification error of a naive logistic regressor. Grid shows pairwise combinations of traning on one source domain (rows) and testing on a target domain (columns). B = 'books', D = 'dvd', E = 'electronics' and K = 'kitchen'.}
+	\caption{Box plots of the mean classification error of the repeats of the cross-validation procedure. The dotted black line is the mean classification error of a naive logistic regressor. Grid shows pairwise combinations of training on one source domain (rows) and testing on a target domain (columns). B = 'books', D = 'dvd', E = 'electronics' and K = 'kitchen'.}
 	\label{err_amazon}
 \end{figure}
 
 \subsubsection{IMDB}
-The IMDB movie database is provided by \cite{maas2011learning} and contains written reviews of movies labeled with a 1-10 star rating. We binarized the labels as $>$ 5 postive and $\leq$ 5 as negative, leaving us with nicely balanced classes. For computational reasons we only kept features that had more than 100 counts in total, leaving us with 4180 features for 21954 samples. Since sentiment is described differently for different types of movies, the domains are the genres here. They are quite imbalanced, with 17 008 'action' movies, 1249 'family' movies and 3697 'war' movies.
+The IMDB movie database is provided by \cite{maas2011learning} and contains written reviews of movies labeled with a 1-10 star rating. We binarized the labels as $>$ 5 positive and $\leq$ 5 as negative, leaving us with nicely balanced classes. For computational reasons we only kept features that had more than 100 counts in total, leaving us with 4180 features for 21954 samples. Since sentiment is described differently for different types of movies, the domains are the genres here. They are quite imbalanced, with 17 008 'action' movies, 1249 'family' movies and 3697 'war' movies.
 					
 \begin{figure}[ht]
 \centering
 \includegraphics[width=.9\textwidth]{images/eg_imdb.eps}
-\caption{Normalized frequencies across domains of some example words of the imdb dataset. Note that the frequencies are more similar across domains than for the amazon dataset.}
+\caption{Normalized frequencies across domains of some example words of the IMDB dataset. Note that the frequencies are more similar across domains than for the amazon dataset.}
 \label{eg_imdb}
 \end{figure}
 
@@ -329,13 +327,13 @@ The normalized frequencies of this dataset show few differences across domains (
 \begin{figure}[ht]
 	\centering
 	\includegraphics[width=.9\textwidth]{images/err_imdb_box.eps}
-	\caption{Box plots of the mean classification error of the repeats of the crossvalidation procedure. The dotted black line is the mean classification error of a naive logistic regressor. Grid shows pairwise combinations of traning on one source domain (rows) and testing on a target domain (columns). A= 'action', F = 'family' and W = 'war'.}
+	\caption{Box plots of the mean classification error of the repeats of the cross-validation procedure. The dotted black line is the mean classification error of a naive logistic regressor. Grid shows pairwise combinations of training on one source domain (rows) and testing on a target domain (columns). A= 'action', F = 'family' and W = 'war'.}
 	\label{err_imdb}
 \end{figure}
 
 
 \subsubsection{Spam}
-We can also view spam detection in different media as a domain adaptation problem. Here we have collected two datasets from the UCI machine learning repository, one containing the enron e-mail spam database and one containing the sms-spam dataset. Both datasets were parsed into a bag-of-words representation but we kept only the 4272 words that occurred in both domains as the new common feature space. Classes are balanced but the domains are very imbalanced; 5000 out of 40 000 documents are text messages.
+We can also view spam detection in different media as a domain adaptation problem. Here we have collected two datasets from the UCI machine learning repository, one containing the Enron e-mail spam database and one containing the sms-spam dataset. Both datasets were parsed into a bag-of-words representation but we kept only the 4272 words that occurred in both domains as the new common feature space. Classes are balanced but the domains are very imbalanced; 5000 out of 40 000 documents are text messages.
 
 \begin{figure}[ht]
 	\centering
@@ -349,7 +347,7 @@ Figure \ref{eg_spam} is a good example of the differences between the two domain
 \begin{figure}[ht]
 	\centering
 	\includegraphics[width=.9\textwidth]{images/err_spam_box.eps}
-	\caption{Box plots of the mean classification error of every repeat of the crossvalidation procedure. The dotted black line is the mean classification error of a naive logistic regressor. Grid shows pairwise combinations of traning on one source domain (rows) and testing on a target domain (columns). S = sms' and M = 'mail'.}
+	\caption{Box plots of the mean classification error of every repeat of the cross-validation procedure. The dotted black line is the mean classification error of a naive logistic regressor. Grid shows pairwise combinations of training on one source domain (rows) and testing on a target domain (columns). S = sms' and M = 'mail'.}
 	\label{err_spam}
 \end{figure}
 
@@ -368,7 +366,7 @@ Figure \ref{err_digits} tells us that some combinations of data lead to poor ada
 \begin{figure}[ht]
 	\centering
 	\includegraphics[width=.9\textwidth]{images/err_digits_box.eps}
-	\caption{Box plots of the mean classification error of every repeat of the crossvalidation procedure. The dotted black line is the mean classification error of a naive logistic regressor. Grid shows pairwise combinations of traning on one source domain (rows) and testing on a target domain (columns). M='mnist', S='semeion' and U='usps'.}
+	\caption{Box plots of the mean classification error of every repeat of the cross-validation procedure. The dotted black line is the mean classification error of a naive logistic regressor. Grid shows pairwise combinations of training on one source domain (rows) and testing on a target domain (columns). M='mnist', S='semeion' and U='usps'.}
 	\label{err_digits}
 \end{figure}
 
@@ -382,12 +380,12 @@ Here we can visualize some of the parameters and go through an example step-by-s
 \end{figure}
 
 \subsubsection{Office}
-This dataset comes from \cite{saenko2010adapting} and is made from images of objects gathered by three different methods: one from images uploaded to Amazon, one taken with a digital SLR camera and on with a webcam. For every image, a SURF descriptor (\citealp{bay2006surf}) is used that descibes interest points in every image. It returns a 800 bin non-normalized histogram and reduces an image to a visual bag-of-words representation. One of the difficulties in this dataset is that there are 31 classes with roughly 120 samples for each class. 
+This dataset comes from \cite{saenko2010adapting} and is made from images of objects gathered by three different methods: one from images uploaded to Amazon, one taken with a digital SLR camera and on with a webcam. For every image, a SURF descriptor (\citealp{bay2006surf}) is used that describes interest points in every image. It returns a 800 bin non-normalized histogram and reduces an image to a visual bag-of-words representation. One of the difficulties in this dataset is that there are 31 classes with roughly 120 samples for each class. 
 
 \begin{figure}[ht]
 	\centering
 	\includegraphics[width=.9\textwidth]{images/err_office_box.eps}
-	\caption{Box plots of the mean classification error of every repeat of the crossvalidation procedure. The dotted black line is the mean classification error of a naive logistic regressor. Grid shows pairwise combinations of traning on one source domain (rows) and testing on a target domain (columns). A='amazon', D='dslr' and W='webcam'.}
+	\caption{Box plots of the mean classification error of every repeat of the cross-validation procedure. The dotted black line is the mean classification error of a naive logistic regressor. Grid shows pairwise combinations of training on one source domain (rows) and testing on a target domain (columns). A='amazon', D='dslr' and W='webcam'.}
 	\label{err_office3}
 \end{figure}
 
@@ -421,9 +419,9 @@ For this experiment, we are interested in how robust the method is to transforma
 Note that some of the other models, such as instance reweighting, are also not robust against this type of transformation. Furthermore the more features we capture, the lower the probability of having the same frequency over all features.
 
 \section{Discussion}
-Overall, the {\sc fir} classifier competes well with the other methods; it has the lowest error rate for most of the combinations shown here. Furthermore, its' worst case performance is still the naive source classifier and it seems to perform equally well on image data as on text data, something that for instance {\sc scl} seems to struggle with.
+Overall, the {\sc fir} classifier competes well with the other methods; it has the lowest error rate for most of the combinations shown here. Furthermore, its worst-case performance is still the naive source classifier and it seems to perform equally well on image data as on text data, something that for instance {\sc scl} seems to struggle with.
 
-For both loss functions chosen here, the adapted classifer results in the original loss on the source samples plus a data-dependent regularization term. It is interesting to consider regularization as a method of incorporating prior knowledge. Of course, this is already done: if it is known that the solution is not extremely complex, $\ell_{2}$ regularization is used, while if the solution is known to be sparse, $\ell_{!}$ regularization is used. However, since we are looking at very specific test sets it makes sense to construct a regularization term based on the domain differences.
+For both loss functions chosen here, the adapted classifier results in the original loss on the source samples plus a data-dependent regularization term. It is interesting to consider regularization as a method of incorporating prior knowledge. Of course, this is already done: if it is known that the solution is not extremely complex, $\ell_{2}$ regularization is used, while if the solution is known to be sparse, $\ell_{!}$ regularization is used. However, since we are looking at very specific test sets it makes sense to construct a regularization term based on the domain differences.
 
 Note that for independent domains, the transfer distribution does not exist. Successfully adapting a classifier is arguably not possible for these problems. We do not know in advance if two domains are independent, but one sufficient condition would be if if both domains lived in disjoint subspaces of the feature space. The spam dataset we presented here is an example where it turned out that the two domains, mail and sms, are most likely independent.
 
