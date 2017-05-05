@@ -2,7 +2,7 @@
 
 This repository contains experiments and MATLAB code accompanying the paper:
 
-" Feature-level domain"
+" Feature-level domain adaptation"
 
 published in the Journal of Machine Learning Research in 2015.
 
