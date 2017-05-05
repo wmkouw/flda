@@ -8,7 +8,9 @@ published in the Journal of Machine Learning Research in 2015.
 
 ## Usage
 
-The folder _experiment-*_ contains a file that runs an experiment on a dataset, while the _util_ folder contains utility functions and algorithms. _data_ contains download and parsing scripts.
+- __experiment-*__ contains scripts for running experiments reported in the paper.
+- __data__ contains a script for obtaining and processing data used in the paper.
+- __util__ contains utility functions and algorithms.
 
 Dependencies:
  - MinFunc (http://www.cs.ubc.ca/~schmidtm/Software/minFunc.html)
