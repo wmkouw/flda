@@ -1,4 +1,4 @@
-# Domain adaptation - feature level
+# Domain adaptation: feature-level domain adaptation
 
 This repository contains experiments and MATLAB code accompanying the paper:
 
@@ -14,4 +14,3 @@ published in the Journal of Machine Learning Research in 2015.
 
 Dependencies:
  - MinFunc (http://www.cs.ubc.ca/~schmidtm/Software/minFunc.html)
-
