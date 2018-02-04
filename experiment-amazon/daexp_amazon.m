@@ -3,7 +3,7 @@ function daexp_amazon(clf,varargin)
 
 % Parse hyperparameters
 p = inputParser;
-addOptional(p, 'cix', []);
+addOptional(p, 'cix', 1:12);
 addOptional(p, 'prep', {});
 addOptional(p, 'l2', 0);
 addOptional(p, 'nR', 1);
@@ -16,45 +16,21 @@ addOptional(p, 'Kt', 'rbf');
 addOptional(p, 'Kp', 1);
 parse(p, varargin{:});
 
-% Really don't like long variable names...
-l2 = p.Results.l2;
-nR = p.Results.nR;
-nF = p.Results.nF;
-nE = p.Results.nE;
-mu = p.Results.mu;
-La = p.Results.La;
-Ga = p.Results.Ga;
-Kt = p.Results.Kt;
-Kp = p.Results.Kp;
-prep = p.Results.prep;
-
 % Update progress
 disp(['Evaluating ' clf ' on amazon']);
 
 % Load data
-try
-    load('/tudelft.net/staff-bulk/ewi/insy/PRLab/Staff/wmkouw/flda-amazon/amazon3.mat');
-catch
-    load('amazon3.mat');
-end
+load('da_amazon.mat');
 
 % Preprocess counts
-D = da_prep(D,prep);
+D = da_prep(D, p.Results.prep);
 
-% Loop trough pairwise da combinations
+% Pairwise domain adaptation combinations
 lD = length(domain_names);
 cmb = [nchoosek(1:lD,2); fliplr(nchoosek(1:lD,2))];
 lCmb = length(cmb);
 
-% Check for index of source-target combination
-if ~isempty(p.Results.cix)
-    lcc = p.Results.cix;
-    lCmb = 1;
-else
-    lcc = 1:lCmb;
-end
-
-if any(strcmp(clf, {'tlr','tqd'}));
+if any(strcmp(clf, {'tlr','tqd'}))
     
     % Preallocation
     W = cell(1,lD);
@@ -71,7 +47,10 @@ if any(strcmp(clf, {'tlr','tqd'}));
         ixX = domains(d)+1:domains(d+1);
         X = [D(:,ixX); ones(1,length(ixX))];
         yX = y(ixX);
-        [W{d},Theta{d},err(d),mis{d},lambda(d)] = da_xval(clf, X,yX,X,yX,'nR', nR, 'nF', nF, 'l2', l2, 'nE', nE,'mu',mu,'Kt',Kt,'Kp',Kp,'La',La,'Ga',Ga);
+        [W{d},Theta{d},err(d),mis{d},lambda(d)] = da_xval(clf, X,yX,X,yX, ...
+            'nR', p.Results.nR, 'nF', p.Results.nF, 'l2', p.Results.l2, ...
+            'nE', p.Results.nE, 'mu', p.Results.mu, 'Kt', p.Results.Kt, ...
+            'Kp', p.Results.Kp, 'La', p.Results.La, 'Ga', p.Results.Ga);
     end
     
 else
@@ -83,9 +62,8 @@ else
     mis = cell(1,lCmb);
     lambda = zeros(1,lCmb);
     
-    
-    % Loop through all pairwise combinations of domains
-    for cc = lcc;
+    % Loop through all combintations
+    for cc = p.Results.cix
         
         % Update progress
         disp([domain_names{cmb(cc,1)} ' -> ' domain_names{cmb(cc,2)}]);
@@ -99,14 +77,17 @@ else
         yX = y(ixX);
         
         % Run a crossvalidation procedure for the l2 parameter
-        [W{cc},Theta{cc}, err(cc), mis{cc}, lambda(cc)] = da_xval(clf,X,yX,Z,yZ,'nR', nR, 'nF', nF, 'l2', l2, 'nE', nE,'mu',mu,'Kt',Kt,'Kp',Kp,'La',La,'Ga',Ga);
+        [W{cc},Theta{cc}, err(cc), mis{cc}, lambda(cc)] = da_xval(clf,X,yX,Z,yZ, ...
+            'nR', p.Results.nR, 'nF', p.Results.nF, 'l2', p.Results.l2, ...
+            'nE', p.Results.nE, 'mu', p.Results.mu, 'Kt', p.Results.Kt, ...
+            'Kp', p.Results.Kp, 'La', p.Results.La, 'Ga', p.Results.Ga);
         
     end
 end
 
 % Write results
 
-fname = ['daexp_amazon_xval_'  clf '_prep' prep{:} '_cix' num2str(p.Results.cix) '.mat'];
+fname = ['daexp_amazon_xval_'  clf '_prep' p.Results.prep{:} '_cix' num2str(p.Results.cix) '.mat'];
 disp(['Done. Writing to : ' fname]);
 save(fname, 'err','Theta','W', 'cmb', 'mis','lambda','l2');
 

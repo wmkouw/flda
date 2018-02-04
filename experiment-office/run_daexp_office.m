@@ -1,36 +1,44 @@
-function run_daexp_office(clf,cc)
-% Stupid script to run all combinations
-disp(['Running crossvalidated classification error experiments on the office dataset']);
+function run_daexp_office(clf)
+% Script with experiment parameters
 
-addpath(genpath('../minFunc'));
-addpath(genpath('../tcaPackage'));
-addpath(genpath('../DA_SA'));
-addpath(genpath('../libsvm-3.21'));
-addpath(genpath('../da-tools'));
+% Which pairwise domain combinations
+cc = 1:6;
 
-addpath(genpath('..\minFunc'));
-addpath(genpath('..\..\da-tools'));
-addpath(genpath('..\..\da-tools\tcaPackage'));
-addpath(genpath('..\..\da-tools\DA_SA'));
-addpath(genpath('C:\Users\Wouter\Dropbox\Codes\libsvm-3.21\matlab'));
-
+% Which features to use
 fts = 'caltech';
+
+% Data preprocessing steps
 prep = {'max'};
-nR = 2;
+
+% Number of repetitions
+nR = 1;
+
+% Number of folds
 nF = 2;
+
+% Subspace dimensionality
 nE = 500;
+
+% Kernel type
 Kt = 'rbf';
+
+% Kernel bandwidth parameter
 Kp = [1 10 100];
-mu = [0.1 1];
-La = [0];
-Ga = [.001 .01 .1 1];
-l2 = [0 1e-6 1e-2 1e-1 1 1e1 1e2 1e3 1e4 1e5 1e6];
 
-daexp_office(clf, 'prep', prep, 'cix', cc, 'nR', nR, 'nF', nF, 'l2', l2, 'fts', fts, 'nE', nE, 'mu', mu, 'La',La,'Ga',Ga,'Kt',Kt,'Kp',Kp);
+% Mu parameter for TCA
+mu = [0.01 0.1 1 10];
 
-% exit
+% Lambda parameter
+La = [0 1 10];
+
+% Gamma parameter
+Ga = [.00001 0.001 1];
+
+% l2-regularization parameter
+l2 = [1 10 100 1000 10000 100000];
+
+% Experiment function
+daexp_office(clf, 'cix', cc, 'prep', prep, 'nR', nR, 'nF', nF, 'l2', l2, ...
+    'fts', fts, 'nE', nE, 'mu', mu, 'La', La, 'Ga', Ga, 'Kt', Kt, 'Kp', Kp);
 
 end
-
-
-%%

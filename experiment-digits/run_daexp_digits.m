@@ -1,31 +1,41 @@
-function run_daexp_digits(clf,cc)
-% Stupid script to run all combinations
-disp(['Running crossvalidated classification error experiments on the digits dataset']);
+function run_daexp_digits(clf)
+% Script with experiment parameters
 
-addpath(genpath('../tcaPackage'));
-addpath(genpath('../DA_SA'));
-addpath(genpath('../libsvm-3.21'));
-addpath(genpath('../da-tools'));
+% Which pairwise domain combinations
+cc = 1:2;
 
-addpath(genpath('..\..\da-tools'));
-addpath(genpath('..\..\da-tools\tcaPackage'));
-addpath(genpath('..\..\da-tools\DA_SA'));
-addpath(genpath('C:\Users\Wouter\Dropbox\Codes\libsvm-3.21\matlab'));
-
+% Preprocessing steps
 prep = {'max'};
+
+% Number of repetitions
 nR = 1;
+
+% Number of folds
 nF = 2;
+
+% Subspace dimensionality
 nE = 50;
+
+% Kernel type
 Kt = 'rbf';
+
+% Kernel bandwidth parameter
 Kp = [1 10];
-mu = [0.1 1];
-La = 0;
-Ga = [1e-3 1e-1];
-l2 = [1e-2 1 100 1000];
-set = 'mm_rot_small';
 
-daexp_digits(clf, 'prep', prep, 'cix', cc, 'nR', nR, 'nF', nF, 'l2', l2, 'nE', nE, 'mu', mu,'La', La, 'Ga', Ga, 'Kt',Kt,'Kp',Kp,'set',set);
+% Mu parameter for TCA
+mu = [0.01 0.1 1 10];
 
-% exit;
+% Lambda parameter
+La = [0 1 10];
+
+% Gamma parameter
+Ga = [.00001 0.001 1];
+
+% l2-regularization parameter
+l2 = [1 10 100 1000 10000 100000];
+
+% Experiment function
+daexp_digits(clf, 'prep', prep, 'cix', cc, 'nR', nR, 'nF', nF, 'l2', l2, ...
+    'nE', nE, 'mu', mu, 'La', La, 'Ga', Ga, 'Kt', Kt, 'Kp', Kp);
 
 end

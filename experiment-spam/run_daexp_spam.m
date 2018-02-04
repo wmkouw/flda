@@ -1,30 +1,41 @@
-function run_daexp_spam(clf,cc)
-% Stupid script to run all combinations
-disp(['Running crossvalidated classification error experiments on the spam dataset']);
+function run_daexp_spam(clf)
+% Script with experiment parameters
 
-addpath(genpath('../tcaPackage'));
-addpath(genpath('../DA_SA'));
-addpath(genpath('../libsvm-3.21'));
-addpath(genpath('../da-tools'));
+% Which pairwise domain combinations
+cc = 1:2;
 
-addpath(genpath('..\..\da-tools'));
-addpath(genpath('..\..\da-tools\tcaPackage'));
-addpath(genpath('..\..\da-tools\DA_SA'));
-addpath(genpath('C:\Users\Wouter\Dropbox\Codes\libsvm-3.21\matlab'));
-
+% Data preprocessing steps
 prep = {'max'};
+
+% Number of repetitions
 nR = 1;
+
+% Number of folds
 nF = 2;
+
+% Subspace dimensionality
 nE = 500;
+
+% Kernel type
 Kt = 'rbf';
+
+% Kernel bandwidth parameter
 Kp = 10;
-La = 1;
-Ga = 1;
-mu = 0.1;
-l2 = [1 10 100 1000 10000];
 
-daexp_spam(clf, 'prep', prep, 'cix', cc, 'nR', nR, 'nF', nF, 'l2', l2, 'nE', nE, 'La', La, 'Ga', Ga, 'mu', mu,'Kt',Kt,'Kp',Kp);
+% Mu parameter for TCA
+mu = [0.01 0.1 1 10];
 
-% exit;
+% Lambda parameter
+La = [0 1 10];
+
+% Gamma parameter
+Ga = [.00001 0.001 1];
+
+% l2-regularization parameter
+l2 = [1 10 100 1000 10000 100000];
+
+% Experiment function
+daexp_spam(clf, 'cix', cc, 'prep', prep, 'nR', nR, 'nF', nF, 'l2', l2, ...
+    'nE', nE, 'La', La, 'Ga', Ga, 'mu', mu, 'Kt', Kt, 'Kp', Kp);
 
 end
