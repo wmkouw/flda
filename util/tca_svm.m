@@ -1,4 +1,4 @@
-function [W,TX,TZ,pred,varargout] = tca_svm(X,Z,yX,varargin)
+function [W,C,pred,varargout] = tca(X,Z,yX,yZ,varargin)
 % Function to perform Transfer Component Analysis.
 % Pan, Tsang, Kwok, Yang (2009). Domain Adaptation via Transfer Component Analysis.
 % Uses code shared by prof. Pan
@@ -28,9 +28,6 @@ function [W,TX,TZ,pred,varargout] = tca_svm(X,Z,yX,varargin)
 % Copyright: Wouter M. Kouw
 % Last update: 10-05-2016
 
-
-addpath(genpath('../tcaPackage'));
-
 % Parse input
 p = inputParser;
 addParameter(p, 'yZ', []);
@@ -39,78 +36,79 @@ addParameter(p, 'yV', []);
 addParameter(p, 'nE', []);
 addParameter(p, 'Kt', 'rbf');
 addParameter(p, 'kP', 1);
+addParameter(p, 'gamma', 1);
 addParameter(p, 'mu', 1);
 addParameter(p, 'l2', 0);
 parse(p, varargin{:});
-
-% Cast to full
-X = full(X);
-Z = full(Z);
 
 % Shapes
 [~,NX] = size(X);
 [~,NZ] = size(Z);
 
-% Subspace disagreement measure
-if isempty(p.Results.nE)
-    
-    % Principal Components
-    [PX,~] = pca(X', 'Economy', false);
-    [PZ,~] = pca(Z', 'Economy', false);
-    [PP,~] = pca([X'; Z'], 'Economy', false);
-    
-    % Find subspace disagreement
-    alpha = acos(diag(PX'*PP));
-    beta = acos(diag(PZ'*PP));
-    SDM = 0.5*(sin(alpha) + sin(beta));
-    dix = find(SDM>0.999,1,'first');
-    if isempty(dix); dix = length(SDM); end
-    disp(['Optimal dimensionality (SDM): ' num2str(dix)]);
-else
-    dix = p.Results.nE;
-end
-
-% Set TCA options
-fprintf('TCA based Feature Extraction \n');
-options = tca_options('Kernel', p.Results.Kt, 'KernelParam', p.Results.kP, 'Mu', p.Results.mu, 'lambda', 0, 'Dim', dix);
+% Parse input
+p = inputParser;
+addParameter(p, 'gamma', 1);
+addParameter(p, 'm', 100);
+addParameter(p, 'l2', 0);
+addParameter(p, 'mu', 1);
+addParameter(p, 'theta', 1);
+parse(p, varargin{:});
 
 % Find components
-if ~isempty(p.Results.V)
-    [TX,TZ,TV] = tca(X', Z', options, p.Results.V');
-    varargout{2} = TV;
-else
-    [TX,~,TZ] = tca(X', Z', options, Z');
-end
-fprintf('Found Transfer Components \n');
-
-% Apply Maximum Smoothing Principle for bandwidth selection
-% gamma = median(pdist(TX).^2);
-
-% Crossvalidate over gamma
-gamma = [0.1 1 10 100];
-lG = length(gamma);
-valacc = zeros(1,lG);
-for g = 1:lG
-   valacc(g) = svmtrain(yX, TX, ['-c ' num2str(p.Results.l2) ' -t 2 -q -v 2 -g ' num2str(gamma(g))]);
-end
-[~,gix] = max(valacc);
-disp(['Optimal gamma ' num2str(gamma(gix))]);
+[C,K] = tc(X, Z, 'theta', p.Results.theta, 'mu', p.Results.mu, 'm', p.Results.m);
 
 % Train gamma optimized svm
-W = svmtrain(yX,TX, ['-c ' num2str(p.Results.l2) ' -t 2 -q -g ' num2str(gamma(gix))]);
+W = svmtrain(yX, K(1:NX,:)'*C, ['-c ' num2str(p.Results.l2) ' -t 2 -q -g ' num2str(gamma(gix))]);
 
 % Do classification on target set
 if ~isempty(p.Results.yZ);
-    [pred,acc,~] = svmpredict(p.Results.yZ, TZ, W);
+	% Make predictions
+	[pred,acc,~] = svmpredict(p.Results.yZ, [K(NX+1:NX+NZ,:)'*M; ones(1,NZ)], W);
+	% Compute classification error
     varargout{1} = (100-acc(1))./100;
 else
-    [pred] = svmpredict(zeros(NZ,1), TZ, W, []);
+	% Make predictions on given target samples
+    [pred] = svmpredict(zeros(NZ,1), [K(NX+1:NX+NZ,:)'*M; ones(1,NZ)], W, []);
 end
 
-if ~isempty(p.Results.V)
-    [pred,acc,~] = svmpredict(p.Results.yV, TV, W);
-    varargout{3} = pred';
-else
-    
-    
 end
+
+
+function [M,K] = tc(X,Z,varargin)
+% At the moment, only a radial basis function kernel implemented
+
+% Parse input
+p = inputParser;
+addParameter(p, 'theta', 1);
+addParameter(p, 'mu', 1);
+addParameter(p, 'm', 100);
+parse(p, varargin{:});
+
+% Shapes
+[~,NX] = size(X);
+[~,NZ] = size(Z);
+
+% Form block kernels
+K = rbf_kernel(X,Z, 'theta', p.Results.theta);
+clear X Z
+
+% Objective function
+[M,~] = eigs((eye(NX+NZ)+p.Results.mu*K*[ones(NX)./NX.^2 -ones(NX,NZ)./(NX*NZ); ...
+    -ones(NZ,NX)./(NX*NZ) ones(NZ)./NZ.^2]*K)\(K*((1-1./(NX+NZ)).*eye(NX+NZ))*K), p.Results.m);
+M = real(M);
+
+end
+
+function K = rbf_kernel(X,Z,varargin)
+
+p = inputParser;
+addParameter(p, 'theta', 1);
+parse(p, varargin{:});
+
+Kst = exp(-pdist2(X', Z')/(2*p.Results.theta.^2));
+K = [exp(-pdist2(X', X')/(2*p.Results.theta.^2)) Kst; Kst' exp(-pdist2(Z', Z')/(2*p.Results.theta.^2))];
+
+
+end
+
+

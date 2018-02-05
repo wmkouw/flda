@@ -1,6 +1,11 @@
 # Feature-level domain adaptation
 
-This repository contains MATLAB code accompanying the paper: [feature-level domain adaptation (JMLR, 2015)](http://www.jmlr.org/papers/v17/15-206.html). For a cleaner implementation of flda as well as a translation into Python, see my library on transfer learners and domain-adaptive classifiers: [libTLDA](https://github.com/wmkouw/libTLDA).
+This repository contains MATLAB code accompanying the paper:
+
+ [Kouw, WM, Krijthe, JH, Loog, M, & van der Maaten, LJP (2016). Feature-level
+domain adaptation. Journal of Machine Learning Research, 17 (171), 1-32.](http://www.jmlr.org/papers/v17/15-206.html).
+
+ For a cleaner implementation of flda as well as a translation into Python, see my library on transfer learners and domain-adaptive classifiers: [libTLDA](https://github.com/wmkouw/libTLDA).
 
 ## Installation
 Clone the repository (bash):
@@ -32,7 +37,7 @@ addpath(genpath('./libSVM-3.22'))
 ## Usage
 Repo contains the following folders:
 - __experiment-*__: contains scripts for running experiments reported in the paper.
-- __data__: contains a script for obtaining and processing data used in the paper.
+- __data__: contains the digits, spam, office, imdb and amazon data sets.
 - __util__: contains utility functions and algorithms.
 
 To start an experiment, call the corresponding experiment function (matlab):
@@ -46,9 +51,9 @@ Options for classifiers are:
 - 'flda_qd_b': flda with quadratic loss and blankout transfer model
 - 'flda_qd_d': flda with quadratic loss and dropout transfer model
 - 'gfk_knn': geodesic flow kernel with a k-nearest-neighbour classifier
-- 'kmm': kernel mean matching with importance-weighted logistic regression
 - 'tca_svm': transfer component analysis with a support vector machine
 - 'sa_svm': subspace alignment with a support vector machine
+- 'kmm': kernel mean matching with importance-weighted logistic regression
 - 'scl': structural correspondence learning with logistic regression
 
 
