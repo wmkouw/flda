@@ -2,10 +2,11 @@
 
 This repository contains MATLAB code accompanying the paper:
 
- [Kouw, WM, Krijthe, JH, Loog, M, & van der Maaten, LJP (2016). Feature-level
-domain adaptation. Journal of Machine Learning Research, 17 (171), 1-32.](http://www.jmlr.org/papers/v17/15-206.html).
+"Feature-level domain adaptation."
 
- For a cleaner implementation of flda as well as a translation into Python, see my library on transfer learners and domain-adaptive classifiers: [libTLDA](https://github.com/wmkouw/libTLDA).
+which is published in the Journal of Machine Learning Research 2016 ([pdf](http://www.jmlr.org/papers/v17/15-206.html)/[preprint](https://arxiv.org/abs/1512.04829)).
+
+For a cleaner implementation of flda as well as a translation into Python, see my library on transfer learners and domain-adaptive classifiers: [libTLDA](https://github.com/wmkouw/libTLDA).
 
 ## Installation
 Clone the repository (bash):
